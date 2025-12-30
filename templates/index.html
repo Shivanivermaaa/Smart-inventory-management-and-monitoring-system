@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NexaShelf - AI-Powered Supermarket Management</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://ai-public.creatie.ai/gen_page/tailwind-custom.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com/3.4.5?plugins=forms@0.5.7,typography@0.5.13,aspect-ratio@0.4.2,container-queries@0.1.1"></script>
+    <script src="https://ai-public.creatie.ai/gen_page/tailwind-config.min.js" data-color="#4F46E5" data-border-radius="small"></script>
+    <style>
+        :root {
+            --transition-speed: 0.3s;
+        }
+
+        .hero-image {
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            max-width: 100%;
+            height: auto;
+            object-fit: cover;
+            transition: transform var(--transition-speed) ease-out;
+        }
+
+        .hero-image:hover {
+            transform: scale(1.03);
+        }
+
+        .feature-card {
+            transition: all var(--transition-speed) ease-out;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .nav-link {
+            position: relative;
+            transition: color var(--transition-speed) ease;
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: -4px;
+            left: 0;
+            background-color: #4F46E5;
+            transition: width var(--transition-speed) ease;
+        }
+
+        .nav-link:hover::after {
+            width: 100%;
+        }
+
+        .logo {
+            transition: transform var(--transition-speed) ease-out;
+        }
+
+        .logo:hover {
+            transform: scale(1.1);
+        }
+
+        /* Dark mode styles */
+        .dark {
+            background-color: #1a1a1a;
+        }
+
+        .dark .bg-gray-50 {
+            background-color: #252525;
+        }
+
+        .dark .bg-white {
+            background-color: #303030;
+        }
+
+        .dark .text-gray-900 {
+            color: #ffffff;
+        }
+
+        .dark .text-gray-600 {
+            color: #d4d4d4;
+        }
+
+        .dark .border-gray-200 {
+            border-color: #404040;
+        }
+
+        .dark .hover\:border-custom:hover {
+            border-color: #60a5fa;
+        }
+
+        .dark .text-custom {
+            color: #60a5fa;
+        }
+
+        .dark .bg-custom {
+            background-color: #60a5fa;
+        }
+
+        .dark .hover\:bg-custom:hover {
+            background-color: #3b82f6;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-fadeInUp {
+            animation: fadeInUp 0.6s ease-out forwards;
+        }
+    </style>
+</head>
+<body class="font-[Inter] min-h-screen flex flex-col transition-colors duration-300">
+    <header class="border-b border-gray-200 sticky top-0 bg-white z-50 transition-colors duration-300">
+        <nav class="mx-auto max-w-8xl px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center">
+                <img src="{{ url_for('static', filename='logo_final.jpg') }}" alt="NexaShelf Logo" class="h-16 logo transition-transform duration-300 hover:scale-110">
+            </div>
+            <div class="hidden lg:flex items-center space-x-8">
+                <a href="{{ url_for('dashboard') }}" class="nav-link text-gray-600 hover:text-custom">Dashboard</a>
+                <a href="{{ url_for('inventory') }}" class="nav-link text-gray-600 hover:text-custom">Inventory</a>
+                <a href="{{ url_for('security') }}" class="nav-link text-gray-600 hover:text-custom">Security</a>
+                <a href="{{ url_for('insights') }}" class="nav-link text-gray-600 hover:text-custom">Insights</a>
+                <a href="{{ url_for('reports') }}" class="nav-link text-gray-600 hover:text-custom">Reports</a>
+                <a href="{{ url_for('settings') }}" class="nav-link text-gray-600 hover:text-custom">Settings</a>
+                <div class="flex items-center space-x-4 ml-8">
+                    <a href="{{ url_for('login') }}" class="!rounded-button px-4 py-2 text-custom border border-custom hover:bg-custom hover:text-white transition" aria-label="Log in">Log in</a>
+                    <a href="{{ url_for('login') }}" class="!rounded-button px-4 py-2 bg-custom text-white hover:bg-custom/90 transition" aria-label="Sign up">Sign up</a>
+                    <button id="theme-toggle" class="p-2 rounded-full hover:bg-gray-100 transition">
+                        <i class="fas fa-moon text-gray-600"></i>
+                    </button>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="flex-grow">
+        <section class="relative bg-gray-50 overflow-hidden">
+            <div class="mx-auto max-w-8xl px-6 lg:px-8 py-24">
+                <div class="grid lg:grid-cols-2 gap-12 items-center">
+                    <div class="animate-fadeInUp">
+                        <h1 class="text-5xl font-bold text-gray-900 mb-6">NexaShelf - AI-Powered Supermarket Management</h1>
+                        <p class="text-xl text-gray-600 mb-8">Transform your supermarket operations with cutting-edge AI technology. Monitor inventory, enhance security, and optimize sales with real-time insights.</p>
+                        <a href="{{ url_for('dashboard') }}" class="!rounded-button px-8 py-4 bg-custom text-white text-lg hover:bg-custom/90 transition">Get Started</a>
+                    </div>
+                    <div class="relative">
+                        <img src="{{ url_for('static', filename='front_page_c.jpeg') }}" class="hero-image" alt="Supermarket">
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="py-24">
+            <div class="mx-auto max-w-8xl px-6 lg:px-8">
+                <div class="text-center mb-16 animate-fadeInUp">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-4">Powerful Features for Modern Retail</h2>
+                    <p class="text-xl text-gray-600">Everything you need to manage your supermarket efficiently with NexaShelf</p>
+                </div>
+                <div class="grid md:grid-cols-3 gap-8">
+                    <div class="feature-card p-8 bg-white rounded-lg border border-gray-200 hover:border-custom transition animate-fadeInUp" style="animation-delay: 0.1s">
+                        <div class="w-12 h-12 bg-custom/10 rounded-lg flex items-center justify-center mb-6">
+                            <i class="fas fa-box text-custom text-xl"></i>
+                        </div>
+                        <h3 class="text-xl font-semibold text-gray-900 mb-4">Inventory Management</h3>
+                        <p class="text-gray-600">Real-time stock monitoring, automated reordering, and smart expiry tracking to optimize your inventory levels with NexaShelf.</p>
+                    </div>
+                    <div class="feature-card p-8 bg-white rounded-lg border border-gray-200 hover:border-custom transition animate-fadeInUp" style="animation-delay: 0.2s">
+                        <div class="w-12 h-12 bg-custom/10 rounded-lg flex items-center justify-center mb-6">
+                            <i class="fas fa-shield-alt text-custom text-xl"></i>
+                        </div>
+                        <h3 class="text-xl font-semibold text-gray-900 mb-4">AI-Powered Security</h3>
+                        <p class="text-gray-600">Advanced surveillance with real-time theft detection and smart monitoring for enhanced store security with NexaShelf.</p>
+                    </div>
+                    <div class="feature-card p-8 bg-white rounded-lg border border-gray-200 hover:border-custom transition animate-fadeInUp" style="animation-delay: 0.3s">
+                        <div class="w-12 h-12 bg-custom/10 rounded-lg flex items-center justify-center mb-6">
+                            <i class="fas fa-chart-line text-custom text-xl"></i>
+                        </div>
+                        <h3 class="text-xl font-semibold text-gray-900 mb-4">Smart Analytics</h3>
+                        <p class="text-gray-600">Data-driven insights for better decision making, sales forecasting, and customer behavior analysis with NexaShelf.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-gray-50 border-t border-gray-200 transition-colors duration-300">
+        <div class="mx-auto max-w-8xl px-6 lg:px-8 py-12">
+            <div class="grid md:grid-cols-4 gap-8">
+                <div class="animate-fadeInUp">
+                    <img src="{{ url_for('static', filename='logo_final.jpg') }}" alt="NexaShelf Logo" class="h-16 logo transition-transform duration-300 hover:scale-110">
+                    <p class="text-gray-600">Transform your supermarket operations with cutting-edge AI technology using NexaShelf.</p>
+                </div>
+                <div>
+                    <h4 class="font-semibold text-gray-900 mb-4">Company</h4>
+                    <ul class="space-y-3">
+                        <li><a href="{{ url_for('settings') }}" class="text-gray-600 hover:text-custom transition">About Us</a></li>
+                        <li><a href="{{ url_for('settings') }}" class="text-gray-600 hover:text-custom transition">Careers</a></li>
+                        <li><a href="{{ url_for('settings') }}" class="text-gray-600 hover:text-custom transition">Contact</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-semibold text-gray-900 mb-4">Legal</h4>
+                    <ul class="space-y-3">
+                        <li><a href="{{ url_for('settings') }}" class="text-gray-600 hover:text-custom transition">Privacy Policy</a></li>
+                        <li><a href="{{ url_for('settings') }}" class="text-gray-600 hover:text-custom transition">Terms of Service</a></li>
+                        <li><a href="{{ url_for('settings') }}" class="text-gray-600 hover:text-custom transition">Cookie Policy</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-semibold text-gray-900 mb-4">Follow Us</h4>
+                    <div class="flex space-x-4">
+                        <a href="https://twitter.com" class="text-gray-600 hover:text-custom transition"><i class="fab fa-twitter"></i></a>
+                        <a href="https://linkedin.com" class="text-gray-600 hover:text-custom transition"><i class="fab fa-linkedin"></i></a>
+                        <a href="https://facebook.com" class="text-gray-600 hover:text-custom transition"><i class="fab fa-facebook"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-8 pt-8 border-t border-gray-200">
+                <p class="text-center text-gray-600">© 2025 NexaShelf. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        const themeToggle = document.getElementById('theme-toggle');
+        const body = document.body;
+        const moonIcon = themeToggle.querySelector('i');
+
+        themeToggle.addEventListener('click', () => {
+            body.classList.toggle('dark');
+            if (body.classList.contains('dark')) {
+                moonIcon.classList.remove('fa-moon');
+                moonIcon.classList.add('fa-sun');
+                localStorage.setItem('theme', 'dark');
+            } else {
+                moonIcon.classList.remove('fa-sun');
+                moonIcon.classList.add('fa-moon');
+                localStorage.setItem('theme', 'light');
+            }
+        });
+
+        if (localStorage.getItem('theme') === 'dark') {
+            body.classList.add('dark');
+            moonIcon.classList.remove('fa-moon');
+            moonIcon.classList.add('fa-sun');
+        }
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach((entry) => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('animate-fadeInUp');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.1 });
+
+        document.querySelectorAll('.animate-fadeInUp').forEach((element) => {
+            observer.observe(element);
+        });
+    </script>
+</body>
+</html>

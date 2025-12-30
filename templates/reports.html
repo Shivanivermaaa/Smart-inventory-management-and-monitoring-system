@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reports Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://ai-public.creatie.ai/gen_page/tailwind-custom.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.5.0/echarts.min.js"></script>
+    <script src="https://cdn.tailwindcss.com/3.4.5?plugins=forms@0.5.7,typography@0.5.13,aspect-ratio@0.4.2,container-queries@0.1.1"></script>
+    <script src="https://ai-public.creatie.ai/gen_page/tailwind-config.min.js" data-color="#4F46E5" data-border-radius='small'></script>
+    <style>
+        :root {
+            --transition-speed: 0.3s;
+        }
+
+        /* Scrollable container styles */
+        .scrollable-container {
+            max-height: 200px;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: #888 #f1f1f1;
+        }
+        .scrollable-container::-webkit-scrollbar {
+            width: 8px;
+        }
+        .scrollable-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+        .scrollable-container::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+        .scrollable-container::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+        /* Animation for cards */
+        .animate-card {
+            animation: fadeInSlideUp 0.5s ease-out;
+        }
+        @keyframes fadeInSlideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Animation for buttons and selections */
+        .animate-button:hover {
+            transform: scale(1.05);
+            transition: transform var(--transition-speed) ease;
+        }
+
+        /* Animation for fade-in elements */
+        .animate-fade-in {
+            animation: fadeIn 0.8s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        /* Logo animation */
+        .logo {
+            transition: transform var(--transition-speed) ease-out;
+        }
+        .logo:hover {
+            transform: scale(1.1);
+        }
+
+        /* Dark mode styles */
+        .dark {
+            background-color: #1a1a1a;
+        }
+
+        /* Chart container styles */
+        .chart-container {
+            width: 100%;
+            height: 100%;
+            min-height: 400px; /* Ensure minimum height for larger charts */
+        }
+
+        #salesChart, #stockChart {
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        /* Expanded security timeline */
+        .security-timeline {
+            overflow-y: auto;
+            /* Removed max-height: 100px to allow expansion */
+            /* Increased max-width for better space utilization on large screens */
+            max-width: 100%; /* Full width on all screens */
+        }
+
+        /* Custom very small text for tight layouts */
+        .text-xxs {
+            font-size: 0.625rem; /* 10px */
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen transition-colors duration-300">
+    <nav class="bg-white shadow animate-card">
+        <div class="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex">
+                    <div class="flex-shrink-0 flex items-center">
+                        <img src="{{ url_for('static', filename='logo_final.jpg') }}" alt="Logo" class="h-16 logo transition-transform duration-300 hover:scale-110 animate-bounce-slow">
+                    </div>
+                    <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
+                        <a href="{{ url_for('dashboard') }}" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium animate-button">Dashboard</a>
+                        <a href="{{ url_for('inventory') }}" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium animate-button">Inventory</a>
+                        <a href="{{ url_for('security') }}" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium animate-button">Security</a>
+                        <a href="{{ url_for('insights') }}" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium animate-button">Insights</a>
+                        <a href="{{ url_for('reports') }}" class="border-custom text-custom inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium animate-button">Report</a>
+                        <a href="{{ url_for('settings') }}" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium animate-button">Settings</a>
+                    </div>
+                </div>
+                <div class="flex items-center">
+                    <button type="button" class="p-1 rounded-full text-gray-500 hover:text-gray-600 focus:outline-none animate-pulse-slow">
+                        <span class="sr-only">View notifications</span>
+                        <i class="fas fa-bell text-xl"></i>
+                    </button>
+                    <div class="ml-3 relative">
+                        <div>
+                            <button type="button" class="flex rounded-full bg-white text-sm focus:outline-none animate-button" id="user-menu-button">
+                                <img class="h-8 w-8 rounded-full" src="https://creatie.ai/ai/api/search-image?query=A professional headshot of a business person with a warm smile, wearing formal attire, against a neutral background. The image should be well-lit and focused on the face, capturing a friendly and approachable expression&width=100&height=100&orientation=squarish&flag=e3220eee-e0df-400f-b460-644bd1540fba" alt="User Profile">
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
+        <div class="mb-8 animate-fade-in">
+            <h1 class="text-2xl font-semibold text-gray-900">Reports Overview</h1>
+            <div class="mt-4 flex space-x-4">
+                <div class="relative">
+                    <select id="report-period" class="block w-48 pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-custom focus:border-custom sm:text-sm !rounded-button animate-button" onchange="updateDashboard()">
+                        <option value="7">Last 7 days</option>
+                        <option value="30">Last 30 days</option>
+                        <option value="90">Last 3 months</option>
+                        <option value="custom">Custom range</option>
+                    </select>
+                </div>
+                <button id="export-report" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium !rounded-button text-white bg-custom hover:bg-custom/90 animate-button" onclick="exportReport()">
+                    <i class="fas fa-download mr-2"></i>
+                    Export Report
+                </button>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 gap-6 lg:grid-cols-2 xl:grid-cols-3">
+            <div class="bg-white overflow-hidden shadow rounded-lg animate-card">
+                <div class="p-5">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-chart-line text-custom text-3xl"></i>
+                        </div>
+                        <div class="ml-5 w-0 flex-1">
+                            <dl>
+                                <dt class="text-sm font-medium text-gray-500 truncate">Total Sales</dt>
+                                <dd id="total-sales" class="flex items-baseline">
+                                    <div class="text-2xl font-semibold text-gray-900">₹0</div>
+                                    <div class="ml-2 flex items-baseline text-sm font-semibold text-green-600">
+                                        <i class="fas fa-arrow-up mr-0.5 flex-shrink-0"></i>
+                                        0%
+                                    </div>
+                                </dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-gray-50 px-5 py-3">
+                    <div class="text-sm">
+                        <a href="#" class="font-medium text-custom hover:text-custom/90 animate-button">View details</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white overflow-hidden shadow rounded-lg animate-card delay-200">
+                <div class="p-5">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-box text-custom text-3xl"></i>
+                        </div>
+                        <div class="ml-5 w-0 flex-1">
+                            <dl>
+                                <dt class="text-sm font-medium text-gray-500 truncate">Stock Items</dt>
+                                <dd id="stock-items" class="flex items-baseline">
+                                    <div class="text-2xl font-semibold text-gray-900">0</div>
+                                    <div class="ml-2 flex items-baseline text-sm font-semibold text-red-600">
+                                        <i class="fas fa-arrow-down mr-0.5 flex-shrink-0"></i>
+                                        0%
+                                    </div>
+                                </dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-gray-50 px-5 py-3">
+                    <div class="text-sm">
+                        <a href="#" class="font-medium text-custom hover:text-custom/90 animate-button">View details</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white overflow-hidden shadow rounded-lg animate-card delay-400">
+                <div class="p-5">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-shield-alt text-custom text-3xl"></i>
+                        </div>
+                        <div class="ml-5 w-0 flex-1">
+                            <dl>
+                                <dt class="text-sm font-medium text-gray-500 truncate">Security Events</dt>
+                                <dd id="security-events" class="flex items-baseline">
+                                    <div class="text-2xl font-semibold text-gray-900">12</div>
+                                    <div class="ml-2 flex items-baseline text-sm font-semibold text-yellow-600">
+                                        <i class="fas fa-exclamation-triangle mr-0.5 flex-shrink-0"></i>
+                                        Moderate
+                                    </div>
+                                </dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-gray-50 px-5 py-3">
+                    <div class="text-sm">
+                        <a href="#" class="font-medium text-custom hover:text-custom/90 animate-button">View details</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-8 bg-white shadow rounded-lg animate-card">
+            <div class="px-4 py-5 sm:p-6">
+                <h3 class="text-lg font-medium leading-6 text-gray-900 mb-4 animate-fade-in">Sales Trend</h3>
+                <div id="salesChart" class="h-80 chart-container"></div>
+            </div>
+        </div>
+
+        <div class="mt-8 grid grid-cols-1 gap-2 lg:grid-cols-4"> <!-- Changed to 4 columns for tighter fit, reduced gap to 2 -->
+            <div class="bg-white shadow rounded-lg animate-card w-full lg:col-span-1 lg:order-1"> <!-- Expanded to 1/4 width on large screens -->
+                <div class="px-2 py-2 sm:p-3"> <!-- Further reduced padding for tighter fit -->
+                    <h3 class="text-lg font-medium leading-6 text-gray-900 mb-1 animate-fade-in">Security Events Timeline</h3>
+                    <div id="security-timeline" class="space-y-1 security-timeline animate-fade-in"></div> <!-- Removed max-height for expansion -->
+                </div>
+            </div>
+
+            <div class="bg-white shadow rounded-lg animate-card w-full lg:col-span-3 lg:order-2"> <!-- Expanded to 3/4 width on large screens -->
+                <div class="px-4 py-5 sm:p-6">
+                    <h3 class="text-xl font-medium leading-6 text-gray-900 mb-4 animate-fade-in">Stock Distribution</h3> <!-- Kept larger title -->
+                    <div id="stockChart" class="h-80 chart-container"></div> <!-- Kept height for balance -->
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-white mt-12 shadow animate-card">
+        <div class="max-w-8xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+            <nav class="flex flex-wrap justify-center">
+                <div class="px-5 py-2"><a href="{{ url_for('settings') }}" class="text-base text-gray-500 hover:text-gray-900 animate-button">About</a></div>
+                <div class="px-5 py-2"><a href="{{ url_for('settings') }}" class="text-base text-gray-500 hover:text-gray-900 animate-button">Privacy Policy</a></div>
+                <div class="px-5 py-2"><a href="{{ url_for('settings') }}" class="text-base text-gray-500 hover:text-gray-900 animate-button">Terms of Service</a></div>
+                <div class="px-5 py-2"><a href="{{ url_for('settings') }}" class="text-base text-gray-500 hover:text-gray-900 animate-button">Contact</a></div>
+            </nav>
+            <p class="mt-8 text-center text-base text-gray-400 animate-fade-in">© 2025 NexaShelf. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        const salesChart = echarts.init(document.getElementById('salesChart'));
+        const stockChart = echarts.init(document.getElementById('stockChart'));
+        let allData = [];
+        let currentPeriod = '7';
+
+        async function fetchData() {
+            try {
+                const response = await fetch('https://sheetdb.io/api/v1/sy9qsj2tmiv0k');
+                allData = await response.json();
+                if (!allData || allData.length === 0) {
+                    console.warn('No data received from API, using default values.');
+                    allData = [];
+                }
+                updateDashboard();
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                allData = [];
+                updateDashboard();
+            }
+        }
+
+        function getPeriodData(periodDays) {
+            const now = new Date();
+            const cutoff = new Date(now.setDate(now.getDate() - periodDays));
+            return allData.filter(item => {
+                if (!item.StockArrivalDate) return false;
+                const date = new Date(item.StockArrivalDate);
+                return date >= cutoff && !isNaN(date.getTime());
+            });
+        }
+
+        function calculateSalesTrend(periodData) {
+            const dailySales = {};
+            periodData.forEach(item => {
+                if (!item.StockArrivalDate || !item.SellingPrice || !item.QuantitySold) return;
+                const date = new Date(item.StockArrivalDate).toDateString();
+                const saleValue = parseFloat(item.SellingPrice) * parseInt(item.QuantitySold) || 0;
+                dailySales[date] = (dailySales[date] || 0) + saleValue;
+            });
+
+            const sortedDates = Object.keys(dailySales).sort((a, b) => new Date(a) - new Date(b));
+            return {
+                labels: sortedDates.map(date => new Date(date).toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'short' })).slice(-30), // Show more dates for longer periods
+                data: sortedDates.map(date => dailySales[date] || 0).slice(-30) // Adjust based on period
+            };
+        }
+
+        function calculateStockDistribution(periodData) {
+            const categoryStock = {};
+            periodData.forEach(item => {
+                if (!item.Category || !item.TotalStockAfterSale) return;
+                categoryStock[item.Category] = (categoryStock[item.Category] || 0) + parseInt(item.TotalStockAfterSale) || 0;
+            });
+            return Object.entries(categoryStock).map(([name, value]) => ({ name, value: value || 0 }));
+        }
+
+        function updateDashboard() {
+            const periodDays = parseInt(currentPeriod) || 7;
+            const periodData = getPeriodData(periodDays);
+
+            // Total Sales
+            const totalSales = periodData.reduce((sum, item) => {
+                const price = parseFloat(item.SellingPrice) || 0;
+                const quantity = parseInt(item.QuantitySold) || 0;
+                return sum + (price * quantity);
+            }, 0);
+            const prevPeriodData = getPeriodData(periodDays * 2).slice(periodDays);
+            const prevTotalSales = prevPeriodData.reduce((sum, item) => {
+                const price = parseFloat(item.SellingPrice) || 0;
+                const quantity = parseInt(item.QuantitySold) || 0;
+                return sum + (price * quantity);
+            }, 0) || 1;
+            const salesGrowth = ((totalSales - prevTotalSales) / prevTotalSales * 100).toFixed(1) || 0;
+            document.getElementById('total-sales').innerHTML = `
+                <div class="text-2xl font-semibold text-gray-900">₹${totalSales.toLocaleString('en-IN') || '0'}</div>
+                <div class="ml-2 flex items-baseline text-sm font-semibold ${salesGrowth >= 0 ? 'text-green-600' : 'text-red-600'}">
+                    <i class="fas ${salesGrowth >= 0 ? 'fa-arrow-up' : 'fa-arrow-down'} mr-0.5 flex-shrink-0"></i>
+                    ${Math.abs(salesGrowth)}%
+                </div>
+            `;
+
+            // Stock Items
+            const stockItems = periodData.length || 0;
+            const prevStockItems = getPeriodData(periodDays * 2).slice(periodDays).length || 1;
+            const stockGrowth = ((stockItems - prevStockItems) / prevStockItems * 100).toFixed(1) || 0;
+            document.getElementById('stock-items').innerHTML = `
+                <div class="text-2xl font-semibold text-gray-900">${stockItems}</div>
+                <div class="ml-2 flex items-baseline text-sm font-semibold ${stockGrowth >= 0 ? 'text-green-600' : 'text-red-600'}">
+                    <i class="fas ${stockGrowth >= 0 ? 'fa-arrow-up' : 'fa-arrow-down'} mr-0.5 flex-shrink-0"></i>
+                    ${Math.abs(stockGrowth)}%
+                </div>
+            `;
+
+            // Security Events (simulated)
+            document.getElementById('security-events').innerHTML = `
+                <div class="text-2xl font-semibold text-gray-900">12</div>
+                <div class="ml-2 flex items-baseline text-sm font-semibold text-yellow-600">
+                    <i class="fas fa-exclamation-triangle mr-0.5 flex-shrink-0"></i>
+                    Moderate
+                </div>
+            `;
+
+            // Sales Trend Chart (Improved and Attractive)
+            const salesTrend = calculateSalesTrend(periodData);
+            const salesOption = {
+                animation: true,
+                animationDuration: 1200,
+                animationEasing: 'cubicInOut',
+                tooltip: { 
+                    trigger: 'axis', 
+                    formatter: params => `${params[0].name}<br/>Sales: ₹${params[0].value.toLocaleString('en-IN')}`,
+                    backgroundColor: '#ffffff',
+                    borderColor: '#4A90E2',
+                    textStyle: { color: '#333' },
+                    borderWidth: 1,
+                    padding: 10
+                },
+                grid: { 
+                    left: '3%', 
+                    right: '4%', 
+                    bottom: '10%', 
+                    containLabel: true,
+                    show: true,
+                    borderColor: '#E5E7EB'
+                },
+                xAxis: { 
+                    type: 'category', 
+                    boundaryGap: false, 
+                    data: salesTrend.labels, 
+                    axisLine: { lineStyle: { color: '#E5E7EB' } },
+                    axisTick: { show: true, lineStyle: { color: '#E5E7EB' } },
+                    axisLabel: { 
+                        fontSize: 12, 
+                        color: '#666',
+                        rotate: salesTrend.labels.length > 7 ? 45 : 0 // Rotate labels if too many
+                    }
+                },
+                yAxis: { 
+                    type: 'value', 
+                    name: 'Sales (₹)', 
+                    nameTextStyle: { color: '#666', fontSize: 12 },
+                    axisLine: { show: true, lineStyle: { color: '#E5E7EB' } },
+                    splitLine: { lineStyle: { color: '#F1F5F9' } },
+                    axisLabel: { 
+                        fontSize: 12, 
+                        color: '#666', 
+                        formatter: value => `₹${value.toLocaleString('en-IN')}` 
+                    }
+                },
+                series: [{
+                    data: salesTrend.data,
+                    type: 'line',
+                    areaStyle: { 
+                        color: {
+                            type: 'linear',
+                            x: 0,
+                            y: 0,
+                            x2: 0,
+                            y2: 1,
+                            colorStops: [
+                                { offset: 0, color: 'rgba(74, 144, 226, 0.8)' },
+                                { offset: 1, color: 'rgba(74, 144, 226, 0.1)' }
+                            ]
+                        }
+                    },
+                    itemStyle: { color: '#4A90E2' },
+                    symbol: 'circle',
+                    symbolSize: 8,
+                    lineStyle: { width: 3, color: '#4A90E2' },
+                    smooth: true
+                }],
+                color: ['#4A90E2', '#50C878', '#FF6B6B', '#FFD700']
+            };
+            salesChart.setOption(salesOption);
+
+            // Stock Distribution Chart (Matching Your New Image Exactly, Full Horizontal Space)
+            const stockDist = calculateStockDistribution(periodData);
+            const stockOption = {
+                animation: true,
+                animationDuration: 1500,
+                animationEasing: 'elasticOut',
+                tooltip: { 
+                    trigger: 'item', 
+                    formatter: params => `${params.name}: ${params.value} units (${params.percent.toFixed(2)}%)`,
+                    backgroundColor: '#ffffff',
+                    borderColor: '#4A90E2',
+                    textStyle: { color: '#333' },
+                    borderWidth: 1,
+                    padding: 10
+                },
+                legend: {
+                    orient: 'vertical',
+                    left: '2%', // Moved closer to the left edge for maximum horizontal space
+                    top: 'center',
+                    data: stockDist.map(item => item.name),
+                    textStyle: { 
+                        color: '#333', 
+                        fontSize: 12,
+                        rich: {
+                            a: { color: '#333', fontWeight: 'bold' },
+                            b: { color: '#666', fontSize: 10 }
+                        }
+                    },
+                    itemGap: 4, // Tight spacing to match image
+                    itemWidth: 12,
+                    itemHeight: 12,
+                    formatter: name => {
+                        const item = stockDist.find(d => d.name === name);
+                        return `{a|${name}: } {b|${item.value} units (${((item.value / stockDist.reduce((sum, d) => sum + d.value, 0)) * 100).toFixed(2)}%)}`;
+                    }
+                },
+                series: [{
+                    type: 'pie',
+                    radius: ['40%', '60%'],
+                    center: ['70%', '50%'], // Shifted right slightly to balance with expanded security timeline on left
+                    avoidLabelOverlap: false,
+                    itemStyle: { 
+                        borderRadius: 5, 
+                        borderColor: '#fff', 
+                        borderWidth: 2,
+                        color: (params) => {
+                            const colors = [
+                                '#1E90FF', // Grocery (DodgerBlue)
+                                '#32CD32', // Dairy & Beverages (LimeGreen)
+                                '#FF4500', // Packaged Food (OrangeRed)
+                                '#FFD700', // Home & Kitchen (Gold)
+                                '#9370DB', // Personal Care (MediumPurple)
+                                '#FFA500', // Appliances (Orange)
+                                '#DAA520', // Clothing & Accessories (Goldenrod)
+                                '#FF69B4', // Backpacks (HotPink)
+                                '#C0C0C0', // Raincoat (Silver)
+                            ];
+                            return colors[params.dataIndex % colors.length];
+                        }
+                    },
+                    label: { 
+                        show: true, 
+                        position: 'outside',
+                        formatter: '{b}: {c} units ({d}%)',
+                        fontSize: 12,
+                        color: '#333',
+                        rich: {
+                            b: { fontWeight: 'bold' },
+                            c: { color: '#666' },
+                            d: { color: '#666', fontSize: 10 }
+                        }
+                    },
+                    emphasis: { 
+                        label: { 
+                            show: true, 
+                            fontSize: '14', 
+                            fontWeight: 'bold',
+                            color: '#1E90FF'
+                        }
+                    },
+                    labelLine: { 
+                        show: true,
+                        length: 6, // Tight fit horizontally
+                        length2: 12, // Tight fit horizontally
+                        lineStyle: { color: '#E5E7EB' }
+                    },
+                    data: stockDist.map(item => ({ 
+                        name: item.name, 
+                        value: item.value || 0 
+                    }))
+                }]
+            };
+            stockChart.setOption(stockOption);
+
+            // Security Events Timeline (Expanded to Fill Space)
+            const securityEvents = [
+                { type: 'Unauthorized access', time: 'Today at 2:45 PM', severity: 'red' },
+                { type: 'High traffic alert', time: 'Today at 11:30 AM', severity: 'yellow' },
+                { type: 'System check completed', time: 'Today at 9:00 AM', severity: 'green' }
+            ];
+            document.getElementById('security-timeline').innerHTML = securityEvents.map(event => `
+                <div class="flex items-center space-x-2 py-1 animate-fade-in"> <!-- Increased space-x and py for better visibility in expanded area -->
+                    <div class="flex-shrink-0">
+                        <div class="h-4 w-4 rounded-full bg-${event.severity}-100 flex items-center justify-center"> <!-- Increased size of indicators -->
+                            <i class="fas ${event.severity === 'red' ? 'fa-exclamation-circle' : event.severity === 'yellow' ? 'fa-exclamation-triangle' : 'fa-check-circle'} text-${event.severity}-600 text-xs"></i> <!-- Increased text size -->
+                        </div>
+                    </div>
+                    <div class="flex-1">
+                        <p class="font-medium text-gray-900 truncate">${event.type}</p> <!-- Removed fixed width for expansion -->
+                        <p class="text-gray-500 text-sm">${event.time}</p> <!-- Increased text size for readability -->
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function exportReport() {
+            alert('Exporting report for the selected period...');
+            // Implement actual export logic here (e.g., CSV, PDF)
+        }
+
+        // Update dashboard when period changes
+        document.getElementById('report-period').addEventListener('change', (e) => {
+            currentPeriod = e.target.value;
+            updateDashboard();
+        });
+
+        window.addEventListener('DOMContentLoaded', () => {
+            fetchData();
+        });
+
+        window.addEventListener('resize', () => {
+            salesChart.resize();
+            stockChart.resize();
+        });
+    </script>
+</body>
+</html>

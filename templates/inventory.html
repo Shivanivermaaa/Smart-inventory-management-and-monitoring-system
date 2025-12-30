@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventory Management</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='tailwind-custom.css') }}" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.5.0/echarts.min.js"></script>
+    <script src="https://cdn.tailwindcss.com/3.4.5?plugins=forms@0.5.7,typography@0.5.13,aspect-ratio@0.4.2,container-queries@0.1.1"></script>
+    <script src="https://ai-public.creatie.ai/gen_page/tailwind-config.min.js" data-color="#4F46E5" data-border-radius="small"></script>
+    <style>
+        .scrollable-table {
+            max-height: 500px;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: #888 #f1f1f1;
+        }
+        .scrollable-table::-webkit-scrollbar {
+            width: 8px;
+        }
+        .scrollable-table::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+        .scrollable-table::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+        .scrollable-table::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+        /* Animation styles */
+        .animate-card {
+            animation: fadeInSlideUp 0.5s ease-out;
+        }
+        @keyframes fadeInSlideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-button:hover {
+            transform: scale(1.05);
+            transition: transform 0.3s ease;
+        }
+
+        .animate-fade-in {
+            animation: fadeIn 0.8s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        .animate-pulse-slow {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gray-50">
+    <div class="min-h-screen flex flex-col">
+        <header class="bg-white border-b border-gray-200 shadow-md animate-card">
+            <div class="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between h-16">
+                    <div class="flex">
+                        <div class="flex-shrink-0 flex items-center">
+                            <a href="{{ url_for('index') }}">
+                                <img src="{{ url_for('static', filename='logo_final.jpg') }}" alt="Logo" class="h-16 logo transition-transform duration-300 hover:scale-110">
+                            </a>
+                        </div>
+                        <nav class="hidden sm:ml-6 sm:flex sm:space-x-8">
+                            <a href="{{ url_for('dashboard') }}" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium animate-button">Dashboard</a>
+                            <a href="{{ url_for('inventory') }}" class="border-custom text-custom hover:border-custom hover:text-custom inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium animate-button">Inventory</a>
+                            <a href="{{ url_for('security') }}" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium animate-button">Security</a>
+                            <a href="{{ url_for('insights') }}" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium animate-button">Insights</a>
+                            <a href="{{ url_for('reports') }}" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium animate-button">Report</a>
+                            <a href="{{ url_for('settings') }}" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium animate-button">Settings</a>
+                        </nav>
+                    </div>
+                    <div class="flex items-center">
+                        <button class="p-2 rounded-full text-gray-400 hover:text-gray-500 animate-pulse-slow">
+                            <span class="sr-only">View notifications</span>
+                            <i class="fas fa-bell text-xl"></i>
+                        </button>
+                        <div class="ml-3 relative">
+                            <div>
+                                <button type="button" class="flex rounded-full bg-white text-sm focus:outline-none focus:ring-2 focus:ring-custom focus:ring-offset-2 animate-button" id="user-menu-button">
+                                    <span class="sr-only">Open user menu</span>
+                                    <img class="h-8 w-8 rounded-full" src="https://creatie.ai/ai/api/search-image?query=A professional headshot of a business person with a neutral expression, wearing formal attire, against a plain light background. The image should be well-lit and focused on the face, suitable for a profile picture.&width=100&height=100&orientation=squarish&flag=08f41c68-1b66-4838-8956-46f301d31d77" alt="User profile">
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <main class="flex-1 py-6 animate-card">
+            <div class="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="mb-6 animate-fade-in">
+                    <div class="sm:flex sm:items-center">
+                        <div class="sm:flex-auto">
+                            <h1 class="text-2xl font-semibold text-gray-900">Inventory Management</h1>
+                            <p class="mt-2 text-sm text-gray-700">Manage your products, track stock levels, and monitor inventory movements.</p>
+                        </div>
+                        <div class="mt-4 sm:mt-0 sm:ml-16 sm:flex-none space-x-4">
+                            <button type="button" class="!rounded-button inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium text-white bg-custom hover:bg-custom/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-custom animate-button">
+                                <i class="fas fa-file-import mr-2"></i>
+                                Import
+                            </button>
+                            <button type="button" class="!rounded-button inline-flex items-center justify-center px-4 py-2 border border-gray-300 text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-custom animate-button">
+                                <i class="fas fa-file-export mr-2"></i>
+                                Export
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="mt-6 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 animate-fade-in delay-200">
+                        <div class="flex-1 min-w-0">
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <i class="fas fa-search text-gray-400"></i>
+                                </div>
+                                <input type="text" id="search-input" class="block w-full pl-10 pr-3 py-2 border border-gray-300 !rounded-button leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-custom focus:border-custom sm:text-sm animate-button" placeholder="Search products...">
+                            </div>
+                        </div>
+                        <div class="flex flex-wrap gap-4">
+                            <select id="category-filter" class="!rounded-button block w-full sm:w-auto pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-custom focus:border-custom sm:text-sm animate-button">
+                                <option value="">All Categories</option>
+                            </select>
+                            <select id="stock-filter" class="!rounded-button block w-full sm:w-auto pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-custom focus:border-custom sm:text-sm animate-button">
+                                <option value="">All Stock Levels</option>
+                                <option value="in-stock">In Stock</option>
+                                <option value="low-stock">Low Stock</option>
+                                <option value="out-of-stock">Out of Stock</option>
+                            </select>
+                            <select id="sort-by" class="!rounded-button block w-full sm:w-auto pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-custom focus:border-custom sm:text-sm animate-button">
+                                <option value="">Sort By</option>
+                                <option value="name">Name</option>
+                                <option value="stock">Stock Level</option>
+                                <option value="expiry">Expiry Date</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-6 animate-fade-in">
+                    <div id="low-stock-alert" class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6 animate-pulse">
+                        <div class="flex">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-exclamation-triangle text-yellow-400"></i>
+                            </div>
+                            <div class="ml-3">
+                                <p id="low-stock-text" class="text-sm text-yellow-700"></p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex flex-col">
+                        <div class="-my-2 -mx-4 overflow-x-auto sm:-mx-6 lg:-mx-8">
+                            <div class="inline-block min-w-full py-2 align-middle md:px-6 lg:px-8">
+                                <div class="overflow-hidden shadow ring-1 ring-black ring-opacity-5 !rounded-button scrollable-table">
+                                    <table id="inventory-table" class="min-w-full divide-y divide-gray-300">
+                                        <thead class="bg-gray-50">
+                                            <tr>
+                                                <th scope="col" class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">Product</th>
+                                                <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Category</th>
+                                                <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Stock Level</th>
+                                                <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Expiry Date</th>
+                                                <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Supplier</th>
+                                                <th scope="col" class="relative py-3.5 pl-3 pr-4 sm:pr-6">
+                                                    <span class="sr-only">Actions</span>
+                                                </th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="inventory-body" class="divide-y divide-gray-200 bg-white"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="pagination" class="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6 mt-4 !rounded-button animate-fade-in delay-400">
+                        <div class="flex-1 flex justify-between sm:hidden">
+                            <button id="mobile-prev" class="!rounded-button relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 animate-button">Previous</button>
+                            <button id="mobile-next" class="!rounded-button relative ml-3 inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 animate-button">Next</button>
+                        </div>
+                        <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                            <div>
+                                <p id="pagination-text" class="text-sm text-gray-700"></p>
+                            </div>
+                            <div>
+                                <nav id="pagination-nav" class="relative z-0 inline-flex !rounded-button -space-x-px" aria-label="Pagination"></nav>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer class="bg-white shadow-md animate-card">
+            <div class="max-w-8xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+                <div class="grid grid-cols-2 gap-8 md:grid-cols-4">
+                    <div>
+                        <h3 class="text-sm font-semibold text-gray-400 tracking-wider uppercase">Company</h3>
+                        <ul role="list" class="mt-4 space-y-4">
+                            <li><a href="{{ url_for('settings') }}" class="text-base text-gray-500 hover:text-gray-900 animate-button">About</a></li>
+                            <li><a href="{{ url_for('settings') }}" class="text-base text-gray-500 hover:text-gray-900 animate-button">Careers</a></li>
+                            <li><a href="{{ url_for('settings') }}" class="text-base text-gray-500 hover:text-gray-900 animate-button">Brand</a></li>
+                            <li><a href="{{ url_for('settings') }}" class="text-base text-gray-500 hover:text-gray-900 animate-button">Blog</a></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-semibold text-gray-400 tracking-wider uppercase">Support</h3>
+                        <ul role="list" class="mt-4 space-y-4">
+                            <li><a href="{{ url_for('settings') }}" class="text-base text-gray-500 hover:text-gray-900 animate-button">Help Center</a></li>
+                            <li><a href="{{ url_for('settings') }}" class="text-base text-gray-500 hover:text-gray-900 animate-button">Safety Center</a></li>
+                            <li><a href="{{ url_for('settings') }}" class="text-base text-gray-500 hover:text-gray-900 animate-button">Community</a></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-semibold text-gray-400 tracking-wider uppercase">Legal</h3>
+                        <ul role="list" class="mt-4 space-y-4">
+                            <li><a href="{{ url_for('settings') }}" class="text-base text-gray-500 hover:text-gray-900 animate-button">Privacy</a></li>
+                            <li><a href="{{ url_for('settings') }}" class="text-base text-gray-500 hover:text-gray-900 animate-button">Terms</a></li>
+                            <li><a href="{{ url_for('settings') }}" class="text-base text-gray-500 hover:text-gray-900 animate-button">Cookie Policy</a></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-semibold text-gray-400 tracking-wider uppercase">Connect</h3>
+                        <ul role="list" class="mt-4 space-y-4">
+                            <li><a href="{{ url_for('settings') }}" class="text-base text-gray-500 hover:text-gray-900 animate-button">Contact Us</a></li>
+                            <li><a href="https://twitter.com" class="text-base text-gray-500 hover:text-gray-900 animate-button">Twitter</a></li>
+                            <li><a href="https://facebook.com" class="text-base text-gray-500 hover:text-gray-900 animate-button">Facebook</a></li>
+                            <li><a href="https://instagram.com" class="text-base text-gray-500 hover:text-gray-900 animate-button">Instagram</a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="mt-8 border-t border-gray-200 pt-8 md:flex md:items-center md:justify-between">
+                    <div class="flex space-x-6 md:order-2">
+                        <a href="https://facebook.com" class="text-gray-400 hover:text-gray-500 animate-button"><span class="sr-only">Facebook</span><i class="fab fa-facebook text-xl"></i></a>
+                        <a href="https://instagram.com" class="text-gray-400 hover:text-gray-500 animate-button"><span class="sr-only">Instagram</span><i class="fab fa-instagram text-xl"></i></a>
+                        <a href="https://twitter.com" class="text-gray-400 hover:text-gray-500 animate-button"><span class="sr-only">Twitter</span><i class="fab fa-twitter text-xl"></i></a>
+                        <a href="https://github.com" class="text-gray-400 hover:text-gray-500 animate-button"><span class="sr-only">GitHub</span><i class="fab fa-github text-xl"></i></a>
+                    </div>
+                    <p class="mt-8 text-base text-gray-400 md:mt-0 md:order-1">© 2025 Your Company. All rights reserved.</p>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        let allData = [];
+        const itemsPerPage = 10;
+        let currentPage = 1;
+
+        async function fetchData() {
+            try {
+                const response = await fetch('https://sheetdb.io/api/v1/sy9qsj2tmiv0k');
+                allData = await response.json();
+                populateFilters();
+                updateTable();
+            } catch (error) {
+                console.error('Error fetching inventory data:', error);
+            }
+        }
+
+        function populateFilters() {
+            const categories = [...new Set(allData.map(item => item.Category))];
+            const categoryFilter = document.getElementById('category-filter');
+            categories.forEach(category => {
+                const option = document.createElement('option');
+                option.value = category;
+                option.textContent = category;
+                categoryFilter.appendChild(option);
+            });
+        }
+
+        function filterAndSortData() {
+            let filteredData = [...allData];
+            const searchQuery = document.getElementById('search-input').value.toLowerCase();
+            const categoryFilter = document.getElementById('category-filter').value;
+            const stockFilter = document.getElementById('stock-filter').value;
+            const sortBy = document.getElementById('sort-by').value;
+
+            if (searchQuery) {
+                filteredData = filteredData.filter(item => 
+                    item.Name.toLowerCase().includes(searchQuery) || 
+                    item.ProductID.toLowerCase().includes(searchQuery)
+                );
+            }
+
+            if (categoryFilter) {
+                filteredData = filteredData.filter(item => item.Category === categoryFilter);
+            }
+
+            if (stockFilter) {
+                filteredData = filteredData.filter(item => {
+                    const stock = parseInt(item.TotalStockAfterSale);
+                    if (stockFilter === 'in-stock') return stock > 50;
+                    if (stockFilter === 'low-stock') return stock > 0 && stock <= 50;
+                    if (stockFilter === 'out-of-stock') return stock === 0;
+                    return true;
+                });
+            }
+
+            if (sortBy) {
+                filteredData.sort((a, b) => {
+                    if (sortBy === 'name') return a.Name.localeCompare(b.Name);
+                    if (sortBy === 'stock') return parseInt(a.TotalStockAfterSale) - parseInt(b.TotalStockAfterSale);
+                    if (sortBy === 'expiry') return new Date(a.ExpiryDate) - new Date(b.ExpiryDate);
+                    return 0;
+                });
+            }
+
+            return filteredData;
+        }
+
+        function getExpiryColor(expiryDate) {
+            const today = new Date();
+            const expiry = new Date(expiryDate);
+            const timeDiff = expiry - today;
+            const daysDiff = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
+
+            if (daysDiff < 0) {
+                return 'text-red-600';
+            } else if (daysDiff <= 30) {
+                return 'text-yellow-600';
+            } else {
+                return 'text-green-600';
+            }
+        }
+
+        function updateTable() {
+            const filteredData = filterAndSortData();
+            const tbody = document.getElementById('inventory-body');
+            tbody.innerHTML = '';
+
+            const lowStockCount = filteredData.filter(item => parseInt(item.TotalStockAfterSale) <= 50).length;
+            const alertDiv = document.getElementById('low-stock-alert');
+            const alertText = document.getElementById('low-stock-text');
+            if (lowStockCount > 0) {
+                alertText.innerHTML = `${lowStockCount} products are running low on stock. <a href="#" class="font-medium underline text-yellow-700 hover:text-yellow-600 animate-button">View all</a>`;
+                alertDiv.classList.remove('hidden');
+            } else {
+                alertDiv.classList.add('hidden');
+            }
+
+            const start = (currentPage - 1) * itemsPerPage;
+            const end = start + itemsPerPage;
+            const paginatedData = filteredData.slice(start, end);
+
+            paginatedData.forEach(item => {
+                const stock = parseInt(item.TotalStockAfterSale);
+                let stockStatus = stock > 50 ? 'In Stock' : stock > 0 ? 'Low Stock' : 'Out of Stock';
+                let stockClass = stock > 50 ? 'bg-green-100 text-green-800' : stock > 0 ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800';
+
+                const expiryColor = getExpiryColor(item.ExpiryDate);
+
+                const tr = document.createElement('tr');
+                tr.classList.add('animate-fade-in');
+                tr.innerHTML = `
+                    <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm sm:pl-6">
+                        <div class="flex items-center">
+                            <div class="h-10 w-10 flex-shrink-0">
+                                <div class="h-10 w-10 rounded flex items-center justify-center bg-gray-100 text-gray-600">
+                                    <i class="fas fa-box text-xl"></i>
+                                </div>
+                            </div>
+                            <div class="ml-4">
+                                <div class="font-medium text-gray-900">${item.Name}</div>
+                                <div class="text-gray-500">${item.ProductID}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">${item.Category}</td>
+                    <td class="whitespace-nowrap px-3 py-4 text-sm">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${stockClass}">
+                            ${stockStatus} (${stock})
+                        </span>
+                    </td>
+                    <td class="whitespace-nowrap px-3 py-4 text-sm ${expiryColor} font-medium">${item.ExpiryDate}</td>
+                    <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">${item.Supplier}</td>
+                    <td class="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
+                        <button type="button" class="text-custom hover:text-custom/80 mr-4 animate-button">Edit</button>
+                        <button type="button" class="text-red-600 hover:text-red-900 animate-button">Delete</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            updatePagination(filteredData.length);
+        }
+
+        function updatePagination(totalItems) {
+            const pagination = document.getElementById('pagination');
+            const paginationText = document.getElementById('pagination-text');
+            const paginationNav = document.getElementById('pagination-nav');
+            const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+            if (totalItems <= itemsPerPage) {
+                pagination.classList.add('hidden');
+                return;
+            }
+
+            pagination.classList.remove('hidden');
+            const start = (currentPage - 1) * itemsPerPage + 1;
+            const end = Math.min(currentPage * itemsPerPage, totalItems);
+            paginationText.textContent = `Showing ${start} to ${end} of ${totalItems} results`;
+
+            paginationNav.innerHTML = '';
+            if (currentPage > 1) {
+                paginationNav.innerHTML += `
+                    <button class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 animate-button" onclick="changePage(${currentPage - 1})">
+                        <span class="sr-only">Previous</span>
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                `;
+            }
+
+            const pageRange = 5;
+            let startPage = Math.max(1, currentPage - Math.floor(pageRange / 2));
+            let endPage = Math.min(totalPages, startPage + pageRange - 1);
+            if (endPage - startPage + 1 < pageRange) {
+                startPage = Math.max(1, endPage - pageRange + 1);
+            }
+
+            if (startPage > 1) {
+                paginationNav.innerHTML += `
+                    <button class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 animate-button" onclick="changePage(1)">1</button>
+                    <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">...</span>
+                `;
+            }
+
+            for (let i = startPage; i <= endPage; i++) {
+                paginationNav.innerHTML += `
+                    <button class="relative inline-flex items-center px-4 py-2 border border-gray-300 ${i === currentPage ? 'bg-custom text-white' : 'bg-white text-gray-700 hover:bg-gray-50'} text-sm font-medium animate-button" onclick="changePage(${i})">${i}</button>
+                `;
+            }
+
+            if (endPage < totalPages) {
+                paginationNav.innerHTML += `
+                    <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">...</span>
+                    <button class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 animate-button" onclick="changePage(${totalPages})">${totalPages}</button>
+                `;
+            }
+
+            if (currentPage < totalPages) {
+                paginationNav.innerHTML += `
+                    <button class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 animate-button" onclick="changePage(${currentPage + 1})">
+                        <span class="sr-only">Next</span>
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                `;
+            }
+        }
+
+        function changePage(page) {
+            currentPage = page;
+            updateTable();
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            fetchData();
+
+            document.getElementById('search-input').addEventListener('input', updateTable);
+            document.getElementById('category-filter').addEventListener('change', updateTable);
+            document.getElementById('stock-filter').addEventListener('change', updateTable);
+            document.getElementById('sort-by').addEventListener('change', updateTable);
+        });
+    </script>
+</body>
+</html>

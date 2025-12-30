@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='tailwind-custom.css') }}" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.5.0/echarts.min.js"></script>
+    <script src="https://cdn.tailwindcss.com/3.4.5?plugins=forms@0.5.7,typography@0.5.13,aspect-ratio@0.4.2,container-queries@0.1.1"></script>
+    <script src="https://ai-public.creatie.ai/gen_page/tailwind-config.min.js" data-color="#000000" data-border-radius="small"></script>
+    <style>
+        .scrollable-container {
+            max-height: 200px;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: #888 #f1f1f1;
+        }
+        .scrollable-container::-webkit-scrollbar {
+            width: 8px;
+        }
+        .scrollable-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+        .scrollable-container::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+        .scrollable-container::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+        /* Animation for cards */
+        .animate-card {
+            animation: fadeInSlideUp 0.5s ease-out;
+        }
+        @keyframes fadeInSlideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Animation for buttons and selections */
+        .animate-button:hover {
+            transform: scale(1.05);
+            transition: transform 0.3s ease;
+        }
+
+        /* Animation for charts */
+        .chart-container {
+            animation: fadeIn 0.8s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <nav class="bg-white border-b border-gray-200 shadow-md">
+        <div class="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex">
+                    <div class="flex-shrink-0 flex items-center">
+                        <img src="{{ url_for('static', filename='logo_final.jpg') }}" alt="Logo" class="h-16 logo transition-transform duration-300 hover:scale-110">
+                    </div>
+                    <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
+                        <a href="{{ url_for('dashboard') }}" class="border-custom text-custom inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium animate-button">Dashboard</a>
+                        <a href="{{ url_for('inventory') }}" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium animate-button">Inventory</a>
+                        <a href="{{ url_for('security') }}" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium animate-button">Security</a>
+                        <a href="{{ url_for('insights') }}" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium animate-button">Insights</a>
+                        <a href="{{ url_for('reports') }}" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium animate-button">Report</a>
+                        <a href="{{ url_for('settings') }}" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium animate-button">Settings</a>
+                    </div>
+                </div>
+                <div class="flex items-center">
+                    <button class="p-2 rounded-full text-gray-500 hover:text-gray-600 animate-pulse-slow">
+                        <i class="fas fa-bell text-lg"></i>
+                    </button>
+                    <div class="ml-3 relative">
+                        <div class="flex items-center">
+                            <button class="bg-gray-800 flex text-sm rounded-full focus:outline-none animate-button" id="user-menu">
+                                <img class="h-8 w-8 rounded-full" src="https://creatie.ai/ai/api/search-image?query=A professional headshot of a business person with a warm smile, wearing formal attire, against a neutral background&width=96&height=96&orientation=squarish&flag=6ae98a87-63c1-4680-8a9a-a363df99de4f" alt="">
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
+            <div class="bg-white rounded-lg shadow-lg p-6 animate-card">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-medium text-gray-900">Total Sales</h3>
+                    <select id="sales-period" class="text-sm border-gray-300 rounded-md animate-button">
+                        <option value="today">Today</option>
+                        <option value="week">This Week</option>
+                        <option value="month">This Month</option>
+                    </select>
+                </div>
+                <div class="flex items-baseline">
+                    <p id="total-sales-value" class="text-3xl font-semibold text-gray-900">₹0</p>
+                    <p class="ml-2 text-sm font-medium text-green-600">+0%</p>
+                </div>
+                <div id="sales-chart" class="h-48 mt-4 chart-container"></div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-lg p-6 animate-card">
+                <h3 class="text-lg font-medium text-gray-900 mb-4">Top 10 Products</h3>
+                <div id="top-products-container" class="scrollable-container space-y-4"></div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-lg p-6 animate-card">
+                <h3 class="text-lg font-medium text-gray-900 mb-4">Stock Alerts</h3>
+                <div id="stock-alerts-container" class="scrollable-container"></div>
+            </div>
+        </div>
+
+        <div class="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <div class="bg-white rounded-lg shadow-lg p-6 animate-card">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-medium text-gray-900">Sales Trends</h3>
+                    <div id="trend-buttons" class="flex space-x-2">
+                        <button class="!rounded-button px-3 py-1 text-sm font-medium bg-custom text-white animate-button" data-period="daily">Daily</button>
+                        <button class="!rounded-button px-3 py-1 text-sm font-medium text-gray-500 bg-gray-100 animate-button" data-period="weekly">Weekly</button>
+                        <button class="!rounded-button px-3 py-1 text-sm font-medium text-gray-500 bg-gray-100 animate-button" data-period="monthly">Monthly</button>
+                    </div>
+                </div>
+                <div id="trends-chart" class="h-80 chart-container"></div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-lg p-6 animate-card">
+                <h3 class="text-lg font-medium text-gray-900 mb-4">AI Insights</h3>
+                <div id="ai-insights" class="space-y-4"></div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-white border-t border-gray-200 mt-8 shadow-md">
+        <div class="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div class="flex justify-between items-center">
+                <div class="text-sm text-gray-500">© 2024 Your Company. All rights reserved.</div>
+                <div class="flex space-x-6">
+                    <a href="{{ url_for('settings') }}" class="text-sm text-gray-500 hover:text-gray-900 animate-button">Privacy Policy</a>
+                    <a href="{{ url_for('settings') }}" class="text-sm text-gray-500 hover:text-gray-900 animate-button">Terms of Service</a>
+                    <a href="{{ url_for('settings') }}" class="text-sm text-gray-500 hover:text-gray-900 animate-button">Contact Us</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        const salesChart = echarts.init(document.getElementById('sales-chart'));
+        const trendsChart = echarts.init(document.getElementById('trends-chart'));
+        let allData = [];
+
+        async function fetchData() {
+            const response = await fetch('https://sheetdb.io/api/v1/sy9qsj2tmiv0k');
+            allData = await response.json();
+            updateDashboard('today', 'daily');
+        }
+
+        function updateSalesChart(period) {
+            const now = new Date('2025-01-01'); // Set to January 1, 2025
+            let salesData, labels;
+
+            if (period === 'today') {
+                salesData = Array(24).fill(0);
+                labels = Array.from({ length: 24 }, (_, i) => `${i}:00`);
+                allData.forEach(item => {
+                    if (item.StockArrivalDate) {
+                        const date = new Date(item.StockArrivalDate);
+                        if (date.toDateString() === now.toDateString()) {
+                            const hour = date.getHours();
+                            const price = parseFloat(item.SellingPrice) || 0;
+                            const quantity = parseInt(item.QuantitySold) || 0;
+                            salesData[hour] += price * quantity;
+                        }
+                    }
+                });
+            } else if (period === 'week') {
+                salesData = Array(7).fill(0);
+                labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+                allData.forEach(item => {
+                    if (item.StockArrivalDate) {
+                        const date = new Date(item.StockArrivalDate);
+                        const diff = Math.floor((now - date) / (1000 * 60 * 60 * 24));
+                        if (diff >= 0 && diff < 7) {
+                            const day = date.getDay();
+                            const price = parseFloat(item.SellingPrice) || 0;
+                            const quantity = parseInt(item.QuantitySold) || 0;
+                            salesData[day] += price * quantity;
+                        }
+                    }
+                });
+            } else { // month
+                const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate(); // 31 for Jan 2025
+                salesData = Array(daysInMonth).fill(0); // Initialize all 31 days with 0
+                labels = Array.from({ length: daysInMonth }, (_, i) => `${i + 1}`); // Days 1 to 31
+
+                // Debug: Log allData to inspect its structure
+                console.log('allData:', allData);
+
+                // Aggressive date parsing for all common formats
+                allData.forEach(item => {
+                    if (item.StockArrivalDate) {
+                        try {
+                            let date;
+                            if (typeof item.StockArrivalDate === 'string') {
+                                // Try multiple date formats
+                                const formats = [
+                                    item.StockArrivalDate, // Direct string
+                                    item.StockArrivalDate.replace(/-/g, '/'), // Handle dashes vs. slashes
+                                    item.StockArrivalDate.replace(/\//g, '-'), // Handle slashes vs. dashes
+                                    item.StockArrivalDate.split(' ').shift(), // Handle timestamps or extra data
+                                    item.StockArrivalDate.split('T').shift(), // Handle ISO format
+                                    // Try common formats like MM/DD/YYYY, DD/MM/YYYY, YYYY-MM-DD
+                                    item.StockArrivalDate.replace(/(\d{1,2})[/-](\d{1,2})[/-](\d{4})/, '$3-$1-$2'), // DD/MM/YYYY or MM/DD/YYYY to YYYY-MM-DD
+                                    item.StockArrivalDate.replace(/(\d{4})[/-](\d{1,2})[/-](\d{1,2})/, '$1-$2-$3') // YYYY-MM-DD (already correct)
+                                ];
+                                for (let format of formats) {
+                                    date = new Date(format);
+                                    if (!isNaN(date.getTime())) {
+                                        console.log(`Successfully parsed date: ${date} from format: ${format}`);
+                                        break;
+                                    }
+                                }
+                            } else {
+                                date = new Date(item.StockArrivalDate);
+                            }
+
+                            if (isNaN(date.getTime())) {
+                                console.error(`Invalid date for item: ${JSON.stringify(item)}`);
+                                return; // Skip invalid dates
+                            }
+
+                            // Debug: Log the parsed date and item
+                            console.log(`Processing date: ${date}, Item: ${JSON.stringify(item)}`);
+
+                            if (date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear()) {
+                                const day = date.getDate() - 1; // 0-based index for array (0 to 30 for Jan)
+                                const price = parseFloat(item.SellingPrice) || 0;
+                                const quantity = parseInt(item.QuantitySold) || 0;
+                                if (!isNaN(price) && !isNaN(quantity) && day >= 0 && day < daysInMonth) {
+                                    salesData[day] += price * quantity;
+                                    console.log(`Adding ${price * quantity} to day ${day + 1}`);
+                                } else {
+                                    console.log(`Invalid price/quantity or day for item: ${JSON.stringify(item)}`);
+                                }
+                            }
+                        } catch (error) {
+                            console.error(`Error parsing date for item: ${JSON.stringify(item)}, Error: ${error}`);
+                        }
+                    } else {
+                        console.log(`Missing StockArrivalDate for item: ${JSON.stringify(item)}`);
+                    }
+                });
+
+                // Ensure all days are displayed, even with zero sales
+                salesData = salesData.map(value => value || 0); // Ensure no undefined/null values
+
+                // Final debug to check salesData distribution
+                console.log('Sales Data for Month:', salesData);
+            }
+
+            const totalSales = salesData.reduce((sum, val) => sum + (val || 0), 0);
+            document.querySelector('#total-sales-value').textContent = `₹${totalSales.toLocaleString('en-IN')}`;
+
+            salesChart.setOption({
+                animation: true,
+                animationDuration: 1000,
+                animationEasing: 'cubicOut',
+                grid: { top: 5, right: 10, bottom: 40, left: 40, containLabel: true },
+                xAxis: { 
+                    type: 'category', 
+                    data: labels,
+                    axisLine: { show: true, lineStyle: { color: '#E5E7EB' } },
+                    axisTick: { show: true },
+                    axisLabel: { 
+                        fontSize: 10, 
+                        color: '#666', 
+                        rotate: labels.length > 10 ? 45 : 0 // Rotate labels if there are many days
+                    }
+                },
+                yAxis: {
+                    type: 'value',
+                    axisLine: { show: true, lineStyle: { color: '#E5E7EB' } },
+                    splitLine: { lineStyle: { color: '#E5E7EB' } },
+                    axisLabel: { 
+                        fontSize: 10, 
+                        color: '#666', 
+                        formatter: value => `₹${value.toLocaleString('en-IN')}` 
+                    }
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    formatter: params => `Date: ${params[0].name}<br>Sales: ₹${params[0].value.toLocaleString('en-IN')}`
+                },
+                series: [{
+                    data: salesData,
+                    type: 'bar',
+                    itemStyle: { 
+                        color: '#000000',
+                        borderRadius: [5, 5, 0, 0]
+                    },
+                    barWidth: '20%',
+                    emphasis: {
+                        itemStyle: {
+                            color: '#333333'
+                        }
+                    }
+                }]
+            });
+        }
+
+        function updateTrendsChart(period) {
+            let trendsData, labels;
+            const now = new Date('2025-01-01'); // Set to January 1, 2025 for consistency
+        
+            if (period === 'daily') {
+                trendsData = Array(7).fill(0);
+                labels = Array(7).fill('').map((_, i) => {
+                    const d = new Date(now);
+                    d.setDate(now.getDate() - (6 - i));
+                    return d.toLocaleDateString('en-US', { weekday: 'short' });
+                });
+                allData.forEach(item => {
+                    if (item.StockArrivalDate) {
+                        const date = new Date(item.StockArrivalDate);
+                        const diff = Math.floor((now - date) / (1000 * 60 * 60 * 24));
+                        if (diff >= 0 && diff < 7) {
+                            trendsData[6 - diff] += parseFloat(item.SellingPrice) * parseInt(item.QuantitySold) || 0;
+                        }
+                    }
+                });
+            } else if (period === 'weekly') {
+                trendsData = Array(4).fill(0);
+                labels = ['Week 1', 'Week 2', 'Week 3', 'Week 4'];
+                allData.forEach(item => {
+                    if (item.StockArrivalDate) {
+                        const date = new Date(item.StockArrivalDate);
+                        if (date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear()) {
+                            const week = Math.floor((date.getDate() - 1) / 7);
+                            trendsData[week] += parseFloat(item.SellingPrice) * parseInt(item.QuantitySold) || 0;
+                        }
+                    }
+                });
+            } else { // monthly
+                trendsData = Array(12).fill(0);
+                labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                allData.forEach(item => {
+                    if (item.StockArrivalDate) {
+                        const date = new Date(item.StockArrivalDate);
+                        if (date.getFullYear() === now.getFullYear()) {
+                            const month = date.getMonth();
+                            trendsData[month] += parseFloat(item.SellingPrice) * parseInt(item.QuantitySold) || 0;
+                        }
+                    }
+                });
+            }
+        
+            trendsChart.setOption({
+                animation: true,
+                animationDuration: 1200,
+                animationEasing: 'cubicOut',
+                grid: { top: 5, right: 10, bottom: 40, left: 40, containLabel: true },
+                xAxis: {
+                    type: 'category',
+                    data: labels,
+                    axisLine: { show: true, lineStyle: { color: '#E5E7EB' } },
+                    axisTick: { show: true },
+                    axisLabel: { fontSize: 10, color: '#666' }
+                },
+                yAxis: {
+                    type: 'value',
+                    axisLine: { show: true, lineStyle: { color: '#E5E7EB' } },
+                    splitLine: { lineStyle: { color: '#E5E7EB' } },
+                    axisLabel: { fontSize: 10, color: '#666', formatter: value => `₹${value.toLocaleString('en-IN')}` }
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    formatter: params => `Period: ${params[0].name}<br>Sales: ₹${params[0].value.toLocaleString('en-IN')}`
+                },
+                series: [{
+                    data: trendsData,
+                    type: 'line',
+                    smooth: true,
+                    itemStyle: { color: '#000000' },
+                    areaStyle: {
+                        color: {
+                            type: 'linear',
+                            x: 0, y: 0, x2: 0, y2: 1,
+                            colorStops: [
+                                { offset: 0, color: 'rgba(0, 0, 0, 0.1)' },
+                                { offset: 1, color: 'rgba(0, 0, 0, 0)' }
+                            ]
+                        }
+                    },
+                    emphasis: {
+                        itemStyle: {
+                            color: '#333333'
+                        }
+                    }
+                }]
+            });
+        }
+
+        function updateDashboard(salesPeriod, trendsPeriod) {
+            const topProducts = allData
+                .sort((a, b) => parseInt(b.QuantitySold) - parseInt(a.QuantitySold))
+                .slice(0, 10);
+            document.querySelector('#top-products-container').innerHTML = topProducts.map(product => `
+                <div class="flex items-center animate-fade-in">
+                    <div class="h-12 w-12 rounded flex items-center justify-center bg-gray-100 text-gray-600">
+                        <i class="fas fa-box text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-900">${product.Name}</p>
+                        <p class="text-sm text-gray-500">${product.QuantitySold} units sold</p>
+                    </div>
+                    <div class="ml-auto text-green-600">+${
+                        ((parseFloat(product.SellingPrice) - parseFloat(product.BuyingPrice)) / 
+                        parseFloat(product.BuyingPrice) * 100).toFixed(1)
+                    }%</div>
+                </div>
+            `).join('');
+
+            const lowStock = allData.filter(item => parseInt(item.TotalStockAfterSale) < 50);
+            document.querySelector('#stock-alerts-container').innerHTML = `
+                <div class="bg-red-50 p-4 rounded-md animate-pulse">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-exclamation-circle text-red-400"></i>
+                        </div>
+                        <div class="ml-3">
+                            <h3 class="text-sm font-medium text-red-800">Low Stock Alert</h3>
+                            <div class="mt-2 text-sm text-red-700">
+                                <ul class="list-disc pl-5 space-y-1">
+                                    ${lowStock.map(item => `
+                                        <li>${item.Name} (${item.TotalStockAfterSale} units left)</li>
+                                    `).join('')}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            const topCategory = allData.reduce((acc, item) => {
+                acc[item.Category] = (acc[item.Category] || 0) + parseInt(item.QuantitySold);
+                return acc;
+            }, {});
+            const topCat = Object.entries(topCategory).sort((a, b) => b[1] - a[1])[0];
+            
+            const profitMargin = allData.reduce((acc, item) => {
+                const profit = (parseFloat(item.SellingPrice) - parseFloat(item.BuyingPrice)) * parseInt(item.QuantitySold);
+                return acc + profit;
+            }, 0) / allData.reduce((acc, item) => acc + (parseFloat(item.SellingPrice) * parseInt(item.QuantitySold)), 0) * 100;
+
+            const dailySales = Array(24).fill(0);
+            allData.forEach(item => {
+                if (item.StockArrivalDate) {
+                    const date = new Date(item.StockArrivalDate);
+                    dailySales[date.getHours()] += parseInt(item.QuantitySold);
+                }
+            });
+            const peakHour = dailySales.indexOf(Math.max(...dailySales));
+
+            document.querySelector('#ai-insights').innerHTML = `
+                <div class="flex items-start animate-fade-in">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-lightbulb text-yellow-400"></i>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm text-gray-900">Stock more ${topCat[0]} items - Top selling category with ${topCat[1]} units sold</p>
+                    </div>
+                </div>
+                <div class="flex items-start animate-fade-in delay-200">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-chart-line text-blue-400"></i>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm text-gray-900">Current profit margin is ${profitMargin.toFixed(1)}% - Consider price optimization</p>
+                    </div>
+                </div>
+                <div class="flex items-start animate-fade-in delay-400">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-clock text-green-400"></i>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm text-gray-900">Peak sales hour is ${peakHour}:00-${peakHour + 1}:00 - Optimize staffing accordingly</p>
+                    </div>
+                </div>
+            `;
+
+            updateSalesChart(salesPeriod);
+            updateTrendsChart(trendsPeriod);
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            fetchData();
+
+            document.querySelector('#sales-period').addEventListener('change', (e) => {
+                updateSalesChart(e.target.value);
+            });
+
+            document.querySelectorAll('#trend-buttons button').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    document.querySelectorAll('#trend-buttons button').forEach(btn => {
+                        btn.classList.remove('bg-custom', 'text-white');
+                        btn.classList.add('text-gray-500', 'bg-gray-100');
+                    });
+                    e.target.classList.remove('text-gray-500', 'bg-gray-100');
+                    e.target.classList.add('bg-custom', 'text-white');
+                    updateTrendsChart(e.target.dataset.period);
+                });
+            });
+        });
+-
+        window.addEventListener('resize', () => {
+            salesChart.resize();
+            trendsChart.resize();
+        });
+    </script>
+</body>
+</html>
